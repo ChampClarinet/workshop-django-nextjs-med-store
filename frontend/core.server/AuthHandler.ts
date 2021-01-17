@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { API_LOGIN } from '../constants/apis.urls';
 
 export default class AuthHandler {
     static async login(
@@ -6,7 +7,7 @@ export default class AuthHandler {
         username: string,
         password: string,
     ) {
-        const url = hostname + '/api/gettoken/';
+        const url = hostname + API_LOGIN;
         const payload = { username, password };
         const headers = {
             'Content-Type': 'application/json',

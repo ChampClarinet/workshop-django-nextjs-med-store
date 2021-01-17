@@ -1,22 +1,46 @@
 // import Login from '../components/fragments/Login';
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import axios, { AxiosResponse } from 'axios';
-import { ResponseObject } from '../types/generals';
-import { ITokenResponse } from '../types/auth';
-import * as localStorageKey from '../constants/localstorage.key';
 import LoginStatus from '../constants/login.status';
 import { toast } from 'react-toastify';
+import * as urls from '../constants/pages.urls';
+import { login, loginCheck } from '../core.client/auth';
+import { isClientReady } from '../core.client/generals';
 
 export default function Login() {
     const [form, setForm] = useState({ username: '', password: '' });
     const [loginStatus, setLoginStatus] = useState(LoginStatus.NOT_LOGGED_IN);
+    const redirectToHomePage = () => isClientReady ? window.location.href = urls.HOME : '';
+    const saveInputs = (e: ChangeEvent<HTMLInputElement>) => {
+        const key = e.target.name;
+        setForm({ ...form, [key]: e.target.value });
+    }
+    const formSubmit = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const { username, password } = form;
+        login(username, password, localStorage)
+            .then(_ => setLoginStatus(LoginStatus.LOGGED_IN))
+            .catch(({ error, trace }) => {
+                if (!trace || !trace.status) {
+                    setLoginStatus(LoginStatus.UNEXPECTED_ERROR);
+                    return console.error(error);
+                }
+                const { status } = trace;
+                if(status===401) return setLoginStatus(LoginStatus.INVALID_USERNAME_OR_PASSWORD);
+                console.error(error);
+            });
+    }
     useEffect(() => {
         document.body.className = "login-page";
+        if (isClientReady) {
+            const isLoggedIn = loginCheck(localStorage);
+            if (isLoggedIn) redirectToHomePage();
+        }
     }, []);
-    useEffect(() => { 
-        switch(loginStatus){
+    useEffect(() => {
+        switch (loginStatus) {
             case LoginStatus.LOGGED_IN:
                 toast.success('Login Successful');
+                redirectToHomePage();
                 break;
             case LoginStatus.INVALID_USERNAME_OR_PASSWORD:
                 toast.error('Invalid Login Credentials');
@@ -25,33 +49,6 @@ export default function Login() {
                 break;
         }
     }, [loginStatus]);
-    const saveInputs = (e: ChangeEvent<HTMLInputElement>) => {
-        const key = e.target.name;
-        setForm({ ...form, [key]: e.target.value });
-    }
-    const formSubmit = (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        console.log('this should post', form);
-        const { username, password } = form;
-        axios.post('/api/login', { username, password })
-            .then((res: AxiosResponse<ResponseObject<ITokenResponse>>) => {
-                const { error, data, status } = res.data;
-                if (error) throw new Error(error);
-                localStorage.setItem(localStorageKey.TOKEN, data.access);
-                localStorage.setItem(localStorageKey.REFRESH_TOKEN, data.refresh);
-                setLoginStatus(LoginStatus.LOGGED_IN);
-            })
-            .catch((e) => {
-                const response = (e.response as AxiosResponse<ResponseObject<any>>).data;
-                if (!response) {
-                    setLoginStatus(LoginStatus.UNEXPECTED_ERROR);
-                    return console.error(e);
-                }
-                const { status } = response;
-                if (status === 401) return setLoginStatus(LoginStatus.INVALID_USERNAME_OR_PASSWORD);
-                console.log(e)
-            });
-    }
     const shouldButtonEnabled = form.username == '' || form.password == '';
     return (
         <div className="login-box">

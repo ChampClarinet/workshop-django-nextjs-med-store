@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import AuthHandler from "../../core/AuthHandler";
+import AuthHandler from "../../core.server/AuthHandler";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     if (req.method !== 'POST') {

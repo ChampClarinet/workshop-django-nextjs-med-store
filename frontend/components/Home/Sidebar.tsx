@@ -1,12 +1,17 @@
 import { useState, useRef } from 'react';
+import { logout } from '../../core.client/auth';
 import { useOutSideAlerter } from '../../hooks/ref';
 import '../../styles/_sidebar.module.scss';
 
-export default function Sidebar() {
+interface IProps {
+    onLoggedOut: () => any;
+}
+export default function Sidebar({ onLoggedOut }: IProps) {
     const [isLogoutMenuOpen, setIsLogoutMenuOpen] = useState(false);
     const logoutRef = useRef(null);
     const openLogoutMenu = () => setIsLogoutMenuOpen(true);
     useOutSideAlerter(logoutRef, () => setIsLogoutMenuOpen(false));
+    const onLogoutButtonClick = () => logout(localStorage, onLoggedOut);
     return (
         <section>
             {/* Left Sidebar */}
@@ -29,8 +34,15 @@ export default function Sidebar() {
                                 aria-expanded="true">
                                 {"keyboard_arrow_down"}
                             </i>
-                            <ul className="dropdown-menu pull-right">
-                                <li><a href="#" className=" waves-effect waves-block"><i className="material-icons">input</i>Sign Out</a></li>
+                            <ul
+                                className="dropdown-menu pull-right"
+                                onClick={onLogoutButtonClick}>
+                                <li>
+                                    <a
+                                        href="#"
+                                        className=" waves-effect waves-block">
+                                        <i className="material-icons">input</i>Sign Out</a>
+                                </li>
                             </ul>
                         </div>
                     </div>

@@ -1,0 +1,1 @@
+export const isClientReady = typeof window !== 'undefined';
