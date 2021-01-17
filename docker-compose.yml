@@ -6,7 +6,6 @@ services:
         build:
             context: .
             dockerfile: ./django/Dockerfile
-        restart: always
         command: >
             /bin/bash -c "pip install -r /require/requirements.txt && python manage.py runserver 0.0.0.0:80"
         networks: 
